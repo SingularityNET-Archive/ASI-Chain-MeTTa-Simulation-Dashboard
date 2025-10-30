@@ -1,0 +1,13 @@
+streamlit>=1.28.0
+networkx>=3.1
+pyvis>=0.3.2
+matplotlib>=3.7.0
+pandas>=2.0.0
+
+# Optional: Full MeTTa/Hyperon support (requires Conan to build)
+# To install hyperon, first install Conan: brew install conan
+# Then create profile: conan profile detect
+# Then uncomment the line below and run: pip install -r requirements.txt
+# git+https://github.com/trueagi-io/hyperon-experimental.git#subdirectory=python
+
+
