@@ -430,12 +430,46 @@ def render_main_content():
     2. **Grounded Functions**: Python functions (like `update-reputation`) bridge MeTTa and simulation
     3. **Pattern Matching**: When an agent acts, MeTTa matches the pattern and executes the rule
     4. **State Updates**: Reputation changes are applied to the shared hypergraph space
+    """)
     
-    **Color Coding:**
-    - 🟢 Green: High reputation (150-200)
-    - 🟡 Yellow: Good reputation (100-150)
-    - 🟠 Orange: Medium reputation (50-100)
-    - 🔴 Red: Low reputation (0-50)
+    st.markdown("---")
+    
+    # Graph visualization explanation
+    st.markdown("### 🕸️ Understanding the Network Visualization")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **Nodes (Circles):**
+        - Each node = one agent
+        - **Size**: Larger = higher reputation
+        - **Color**: Indicates reputation level
+          - 🟢 Green: High (150-200)
+          - 🟡 Yellow: Good (100-150)
+          - 🟠 Orange: Medium (50-100)
+          - 🔴 Red: Low (0-50)
+        """)
+    
+    with col2:
+        st.markdown("""
+        **Edges (Lines):**
+        - Connect agents with **similar reputations**
+        - Each agent links to 2-3 nearest reputation peers
+        - Creates **visual clustering** by reputation tier
+        - **Not** direct interactions or trades
+        - Shows reputation-based social structure
+        """)
+    
+    st.info("💡 **Tip**: Watch how agents migrate between clusters as their reputation changes through actions!")
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    **Graph Dynamics:**
+    - High-rep agents naturally cluster in the center
+    - Similar-reputation agents form cohesive groups
+    - Edge thickness reflects combined reputation strength
     """)
 
 
