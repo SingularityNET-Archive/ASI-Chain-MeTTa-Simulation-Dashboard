@@ -508,7 +508,15 @@ def main():
                     unsafe_allow_html=True)
         
         # Step navigation controls
-        if st.session_state.agent_states_history:
+        if st.session_state.agent_states_history and len(st.session_state.agent_states_history) > 0:
+            total_steps = len(st.session_state.agent_states_history)
+            
+            # Ensure current_view_step is within valid bounds
+            if st.session_state.current_view_step >= total_steps:
+                st.session_state.current_view_step = total_steps - 1
+            if st.session_state.current_view_step < 0:
+                st.session_state.current_view_step = 0
+            
             st.markdown("### ⏪ Navigate Through Simulation ⏩")
             
             col1, col2, col3 = st.columns([1, 6, 1])
@@ -520,12 +528,11 @@ def main():
             
             with col2:
                 # Slider to jump to any step
-                total_steps = len(st.session_state.agent_states_history)
                 view_step = st.slider(
                     "Step",
                     min_value=0,
-                    max_value=total_steps - 1,
-                    value=st.session_state.current_view_step,
+                    max_value=max(0, total_steps - 1),
+                    value=min(st.session_state.current_view_step, total_steps - 1),
                     step=1,
                     format="Step %d",
                     key="step_slider"
@@ -534,31 +541,32 @@ def main():
             
             with col3:
                 if st.button("⏭️ Last", use_container_width=True):
-                    st.session_state.current_view_step = len(st.session_state.agent_states_history) - 1
+                    st.session_state.current_view_step = total_steps - 1
                     st.rerun()
             
             # Navigation buttons
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 if st.button("⏪ Previous", use_container_width=True, 
-                            disabled=st.session_state.current_view_step == 0):
+                            disabled=st.session_state.current_view_step <= 0):
                     st.session_state.current_view_step = max(0, st.session_state.current_view_step - 1)
                     st.rerun()
             
             with col4:
                 if st.button("Next ⏩", use_container_width=True,
-                            disabled=st.session_state.current_view_step >= len(st.session_state.agent_states_history) - 1):
+                            disabled=st.session_state.current_view_step >= total_steps - 1):
                     st.session_state.current_view_step = min(
-                        len(st.session_state.agent_states_history) - 1,
+                        total_steps - 1,
                         st.session_state.current_view_step + 1
                     )
                     st.rerun()
             
             st.markdown("---")
             
-            # Get the agent states for the selected step
-            agent_states = st.session_state.agent_states_history[st.session_state.current_view_step]
-            step_info = st.session_state.history[st.session_state.current_view_step]
+            # Get the agent states for the selected step (with bounds checking)
+            current_step = min(st.session_state.current_view_step, total_steps - 1)
+            agent_states = st.session_state.agent_states_history[current_step]
+            step_info = st.session_state.history[current_step]
             
             # Show action that occurred at this step
             action_emoji = {
@@ -579,7 +587,7 @@ def main():
             st.markdown(f"""
             <div style="background-color: {color}; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
                 <span style="font-size: 1.3em; color: white; font-weight: bold;">
-                    Step {st.session_state.current_view_step + 1}: {emoji} {step_info['agent']} performed <u>{step_info['action'].upper()}</u>
+                    Step {current_step + 1}/{total_steps}: {emoji} {step_info['agent']} performed <u>{step_info['action'].upper()}</u>
                     <br>
                     <span style="font-size: 0.9em;">
                     Reputation: {step_info['old_reputation']:.1f} → {step_info['new_reputation']:.1f} 
@@ -610,7 +618,7 @@ def main():
             st.markdown("---")
             
             # Metrics below graph
-            st.subheader(f"📊 Metrics at Step {st.session_state.current_view_step + 1}")
+            st.subheader(f"📊 Metrics at Step {current_step + 1}/{total_steps}")
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
@@ -669,6 +677,9 @@ def main():
             with st.expander("📜 View Complete Action History"):
                 history_df = pd.DataFrame(st.session_state.history)
                 st.dataframe(history_df, use_container_width=True)
+        else:
+            # Fallback if no history (shouldn't happen but safety check)
+            st.warning("No simulation history available. Please run a simulation first.")
 
 
 if __name__ == "__main__":
