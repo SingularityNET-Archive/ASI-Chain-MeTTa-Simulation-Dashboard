@@ -235,7 +235,7 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
                 # Use faster rendering during simulation (less stabilization)
                 pyvis_html = render_pyvis_graph(nx_graph, height="600px", stabilize=False)
                 
-                components.html(pyvis_html, height=620, scrolling=False, key=f"graph_{step}")
+                components.html(pyvis_html, height=620, scrolling=False)
         
         # Update metrics below graph
         with metrics_placeholder.container():
