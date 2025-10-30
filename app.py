@@ -87,6 +87,10 @@ def initialize_session_state():
         st.session_state.sim_params = {}
     if 'graph_update_interval' not in st.session_state:
         st.session_state.graph_update_interval = 3  # Update graph every N steps
+    if 'agent_states_history' not in st.session_state:
+        st.session_state.agent_states_history = []  # Store full agent states at each step
+    if 'current_view_step' not in st.session_state:
+        st.session_state.current_view_step = 0  # Which step we're viewing
 
 
 def render_sidebar():
@@ -168,6 +172,8 @@ def reset_simulation():
     st.session_state.stop_flag = False
     st.session_state.history = []
     st.session_state.health_score_history = []
+    st.session_state.agent_states_history = []
+    st.session_state.current_view_step = 0
 
 
 def run_simulation(num_agents: int, num_steps: int, step_delay: float):
@@ -188,6 +194,8 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
     st.session_state.is_running = True
     st.session_state.history = []
     st.session_state.health_score_history = []
+    st.session_state.agent_states_history = []
+    st.session_state.current_view_step = 0
     
     # Create placeholders for dynamic updates
     status_placeholder = st.empty()
@@ -207,6 +215,11 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
         step_info = st.session_state.simulation.step()
         st.session_state.history.append(step_info)
         st.session_state.health_score_history.append(step_info['health_score'])
+        
+        # Store full agent states for replay
+        agent_states = st.session_state.simulation.get_agent_states()
+        st.session_state.agent_states_history.append(agent_states.copy())
+        st.session_state.current_view_step = step + 1  # Update to latest step
         
         # Update status
         with status_placeholder.container():
@@ -490,27 +503,114 @@ def main():
     if not st.session_state.is_running and not st.session_state.history:
         render_main_content()
     elif st.session_state.history and not st.session_state.is_running:
-        # Show results after simulation completes
-        st.markdown("<div class='main-header'>📊 Simulation Complete</div>", 
+        # Show results after simulation completes with step navigation
+        st.markdown("<div class='main-header'>📊 Simulation Complete - Replay Mode</div>", 
                     unsafe_allow_html=True)
         
-        # Final metrics
-        if st.session_state.simulation:
-            agent_states = st.session_state.simulation.get_agent_states()
-            health_score = st.session_state.simulation.get_health_score()
-            rep_dist = st.session_state.simulation.get_reputation_distribution()
+        # Step navigation controls
+        if st.session_state.agent_states_history:
+            st.markdown("### ⏪ Navigate Through Simulation ⏩")
+            
+            col1, col2, col3 = st.columns([1, 6, 1])
+            
+            with col1:
+                if st.button("⏮️ First", use_container_width=True):
+                    st.session_state.current_view_step = 0
+                    st.rerun()
+            
+            with col2:
+                # Slider to jump to any step
+                total_steps = len(st.session_state.agent_states_history)
+                view_step = st.slider(
+                    "Step",
+                    min_value=0,
+                    max_value=total_steps - 1,
+                    value=st.session_state.current_view_step,
+                    step=1,
+                    format="Step %d",
+                    key="step_slider"
+                )
+                st.session_state.current_view_step = view_step
+            
+            with col3:
+                if st.button("⏭️ Last", use_container_width=True):
+                    st.session_state.current_view_step = len(st.session_state.agent_states_history) - 1
+                    st.rerun()
+            
+            # Navigation buttons
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                if st.button("⏪ Previous", use_container_width=True, 
+                            disabled=st.session_state.current_view_step == 0):
+                    st.session_state.current_view_step = max(0, st.session_state.current_view_step - 1)
+                    st.rerun()
+            
+            with col4:
+                if st.button("Next ⏩", use_container_width=True,
+                            disabled=st.session_state.current_view_step >= len(st.session_state.agent_states_history) - 1):
+                    st.session_state.current_view_step = min(
+                        len(st.session_state.agent_states_history) - 1,
+                        st.session_state.current_view_step + 1
+                    )
+                    st.rerun()
+            
+            st.markdown("---")
+            
+            # Get the agent states for the selected step
+            agent_states = st.session_state.agent_states_history[st.session_state.current_view_step]
+            step_info = st.session_state.history[st.session_state.current_view_step]
+            
+            # Show action that occurred at this step
+            action_emoji = {
+                'contribute': '🤝',
+                'share': '📤',
+                'trade': '💱',
+                'idle': '😴'
+            }
+            emoji = action_emoji.get(step_info['action'], '⚡')
+            action_color = {
+                'contribute': '#27AE60',
+                'share': '#3498DB',
+                'trade': '#F39C12',
+                'idle': '#E74C3C'
+            }
+            color = action_color.get(step_info['action'], '#95A5A6')
+            
+            st.markdown(f"""
+            <div style="background-color: {color}; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center;">
+                <span style="font-size: 1.3em; color: white; font-weight: bold;">
+                    Step {st.session_state.current_view_step + 1}: {emoji} {step_info['agent']} performed <u>{step_info['action'].upper()}</u>
+                    <br>
+                    <span style="font-size: 0.9em;">
+                    Reputation: {step_info['old_reputation']:.1f} → {step_info['new_reputation']:.1f} 
+                    (Change: {step_info['reputation_change']:+.1f})
+                    </span>
+                </span>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Calculate metrics for this step
+            health_score = sum(agent_states.values()) / len(agent_states) if agent_states else 0
+            rep_dist = {'high': 0, 'medium': 0, 'low': 0}
+            for reputation in agent_states.values():
+                if reputation >= 100:
+                    rep_dist['high'] += 1
+                elif reputation >= 50:
+                    rep_dist['medium'] += 1
+                else:
+                    rep_dist['low'] += 1
             
             # Graph visualization (main focus)
-            st.subheader("🕸️ Final Agent Network")
+            st.subheader("🕸️ Agent Network at This Step")
             nx_graph = create_agent_graph(agent_states)
-            # Use full stabilization for final render (better layout)
+            # Use full stabilization for replay (better layout)
             pyvis_html = render_pyvis_graph(nx_graph, height="600px", stabilize=True)
             components.html(pyvis_html, height=620, scrolling=False)
             
             st.markdown("---")
             
             # Metrics below graph
-            st.subheader("📊 Final Metrics")
+            st.subheader(f"📊 Metrics at Step {st.session_state.current_view_step + 1}")
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
