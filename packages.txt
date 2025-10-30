@@ -1,6 +1,1 @@
-# System packages required for the application
-# This file is used by Streamlit Cloud to install system dependencies
-
-# No system packages needed for the simplified version
-# If using full hyperon, additional packages may be required
 
