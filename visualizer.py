@@ -116,7 +116,7 @@ def _get_reputation_color(reputation: float) -> str:
 
 
 def render_pyvis_graph(nx_graph: nx.Graph, height: str = "600px", 
-                       width: str = "100%") -> str:
+                       width: str = "100%", stabilize: bool = True) -> str:
     """
     Convert NetworkX graph to interactive PyVis visualization.
     
@@ -124,6 +124,7 @@ def render_pyvis_graph(nx_graph: nx.Graph, height: str = "600px",
         nx_graph: NetworkX graph object with agent nodes
         height: Height of the visualization
         width: Width of the visualization
+        stabilize: Whether to enable physics stabilization (slower but smoother)
     
     Returns:
         HTML string containing the interactive graph
@@ -138,52 +139,60 @@ def render_pyvis_graph(nx_graph: nx.Graph, height: str = "600px",
         directed=False
     )
     
-    # Configure physics for better layout
-    net.set_options("""
-    {
-        "physics": {
-            "enabled": true,
-            "barnesHut": {
+    # Configure physics - reduced iterations for faster rendering during simulation
+    stabilization_iterations = 100 if stabilize else 20
+    physics_enabled = "true" if stabilize else "false"
+    
+    net.set_options(f"""
+    {{
+        "physics": {{
+            "enabled": {physics_enabled},
+            "barnesHut": {{
                 "gravitationalConstant": -30000,
                 "centralGravity": 0.3,
                 "springLength": 150,
                 "springConstant": 0.04,
-                "damping": 0.09,
+                "damping": 0.15,
                 "avoidOverlap": 0.5
-            },
+            }},
             "maxVelocity": 50,
-            "minVelocity": 0.1,
+            "minVelocity": 0.75,
             "solver": "barnesHut",
-            "stabilization": {
+            "stabilization": {{
                 "enabled": true,
-                "iterations": 100,
-                "updateInterval": 25
-            }
-        },
-        "nodes": {
-            "font": {
+                "iterations": {stabilization_iterations},
+                "updateInterval": 10,
+                "fit": true
+            }}
+        }},
+        "nodes": {{
+            "font": {{
                 "size": 16,
                 "color": "white"
-            },
+            }},
             "borderWidth": 2,
             "borderWidthSelected": 4
-        },
-        "edges": {
-            "color": {
+        }},
+        "edges": {{
+            "color": {{
                 "color": "#848484",
                 "highlight": "#00FF00"
-            },
-            "smooth": {
+            }},
+            "smooth": {{
                 "enabled": true,
                 "type": "continuous"
-            }
-        },
-        "interaction": {
+            }}
+        }},
+        "interaction": {{
             "hover": true,
             "tooltipDelay": 100,
-            "zoomView": true
-        }
-    }
+            "zoomView": true,
+            "dragNodes": true
+        }},
+        "layout": {{
+            "improvedLayout": true
+        }}
+    }}
     """)
     
     # Add nodes from NetworkX graph

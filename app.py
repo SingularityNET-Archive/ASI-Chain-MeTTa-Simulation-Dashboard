@@ -85,6 +85,8 @@ def initialize_session_state():
         st.session_state.start_simulation = False
     if 'sim_params' not in st.session_state:
         st.session_state.sim_params = {}
+    if 'graph_update_interval' not in st.session_state:
+        st.session_state.graph_update_interval = 3  # Update graph every N steps
 
 
 def render_sidebar():
@@ -120,6 +122,16 @@ def render_sidebar():
         step=0.1,
         help="Delay between simulation steps"
     )
+    
+    graph_update_freq = st.sidebar.slider(
+        "Graph Update Frequency",
+        min_value=1,
+        max_value=10,
+        value=3,
+        step=1,
+        help="Update graph every N steps (higher = smoother)"
+    )
+    st.session_state.graph_update_interval = graph_update_freq
     
     st.sidebar.markdown("---")
     
@@ -213,14 +225,17 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
         health_score = st.session_state.simulation.get_health_score()
         rep_dist = st.session_state.simulation.get_reputation_distribution()
         
-        # Update graph visualization (main focus)
-        with graph_placeholder.container():
-            st.subheader("🕸️ Agent Network Visualization")
-            
-            nx_graph = create_agent_graph(agent_states)
-            pyvis_html = render_pyvis_graph(nx_graph, height="600px")
-            
-            components.html(pyvis_html, height=620, scrolling=False)
+        # Update graph visualization (only every N steps to reduce flicker)
+        update_interval = st.session_state.graph_update_interval
+        if step % update_interval == 0 or step == num_steps - 1:
+            with graph_placeholder.container():
+                st.subheader("🕸️ Agent Network Visualization")
+                
+                nx_graph = create_agent_graph(agent_states)
+                # Use faster rendering during simulation (less stabilization)
+                pyvis_html = render_pyvis_graph(nx_graph, height="600px", stabilize=False)
+                
+                components.html(pyvis_html, height=620, scrolling=False, key=f"graph_{step}")
         
         # Update metrics below graph
         with metrics_placeholder.container():
@@ -422,7 +437,8 @@ def main():
             # Graph visualization (main focus)
             st.subheader("🕸️ Final Agent Network")
             nx_graph = create_agent_graph(agent_states)
-            pyvis_html = render_pyvis_graph(nx_graph, height="600px")
+            # Use full stabilization for final render (better layout)
+            pyvis_html = render_pyvis_graph(nx_graph, height="600px", stabilize=True)
             components.html(pyvis_html, height=620, scrolling=False)
             
             st.markdown("---")
