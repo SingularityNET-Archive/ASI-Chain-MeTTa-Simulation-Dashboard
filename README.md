@@ -40,12 +40,18 @@ The simulation demonstrates how cognitive rules defined in MeTTa can govern agen
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 🌐 Try It Online (No Installation Required!)
+
+**Live Demo**: [View on Streamlit Cloud](https://your-app-url.streamlit.app) *(Deploy and update this URL)*
+
+### 💻 Run Locally
+
+#### Prerequisites
 
 - Python 3.8 or higher
 - pip package manager
 
-### Installation
+#### Installation
 
 1. **Clone the repository**
    ```bash
@@ -53,19 +59,29 @@ The simulation demonstrates how cognitive rules defined in MeTTa can govern agen
    cd ASI-Chain-MeTTa-Simulation-Dashboard
    ```
 
-2. **Install dependencies**
+2. **Create virtual environment**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Run the application**
+4. **Run the application**
    ```bash
    streamlit run app.py
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    
    The app will automatically open at `http://localhost:8501`
+
+### ☁️ Deploy Your Own
+
+Want to host your own version? See [DEPLOYMENT.md](DEPLOYMENT.md) for a complete guide to deploying on Streamlit Cloud (free!)
 
 ## 📖 How to Use
 
