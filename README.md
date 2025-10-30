@@ -7,6 +7,23 @@ An interactive **Streamlit** web application that simulates an **Artificial Supe
 ![MeTTa](https://img.shields.io/badge/hyperon-MeTTa-purple)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+---
+
+## 📑 Table of Contents
+
+- [Overview](#-overview)
+- [Quick Start](#-quick-start)
+- [Key Concepts & Terminology](#-key-concepts--terminology)
+- [Design Choices](#-design-choices)
+- [How to Use](#-how-to-use)
+- [Architecture](#-architecture)
+- [Deployment Guide](#-deployment-guide)
+- [Customization](#-customization)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
 ## 🎯 Overview
 
 This dashboard visualizes a multi-agent system where autonomous agents:
@@ -18,289 +35,586 @@ This dashboard visualizes a multi-agent system where autonomous agents:
 
 The simulation demonstrates how cognitive rules defined in MeTTa can govern agent behavior, reputation dynamics, and emergent network properties in a distributed AI system.
 
-## ✨ Features
+### ✨ Features
 
-### Core Simulation
-- **MeTTa Runtime**: Uses the `hyperon` package to create a shared hypergraph memory space
-- **Agent Actions**: Contribute, share, trade, and idle actions with reputation consequences
-- **Cognitive Rules**: Symbolic logic in MeTTa defines how actions affect reputation
-- **Health Score**: System-level metric tracking average agent reputation
+- **Real-time Agent Network Visualization** with step-by-step replay
+- **MeTTa-powered cognitive logic** for symbolic reasoning
+- **Interactive controls** for simulation parameters
+- **Action indicators** showing what's happening at each step
+- **Health score tracking** for system-level metrics
+- **Anti-flicker optimizations** for smooth graph rendering
 
-### Visualization
-- **Interactive Graph**: Real-time NetworkX + PyVis visualization of agent network
-- **Color-Coded Nodes**: Visual representation of reputation levels
-- **Dynamic Updates**: Graph evolves as agents take actions
-- **Network Statistics**: Metrics like density, average degree, and path length
+---
 
-### Streamlit Interface
-- **Sidebar Controls**: Configure number of agents, simulation steps, and speed
-- **Real-Time Metrics**: Live health score, reputation distribution, and status
-- **Action History**: Complete log of all agent actions and reputation changes
-- **Responsive Design**: Clean, modern UI with custom styling
+## 🚀 Quick Start
 
-## 🚀 Getting Started
+### Option 1: Try Online (Recommended)
 
-### 🌐 Try It Online (No Installation Required!)
+**Live Demo**: [View on Streamlit Cloud](https://your-app-url.streamlit.app)
 
-**Live Demo**: [View on Streamlit Cloud](https://your-app-url.streamlit.app) *(Deploy and update this URL)*
+### Option 2: Run Locally
 
-### 💻 Run Locally
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/ASI-Chain-MeTTa-Simulation-Dashboard.git
+cd ASI-Chain-MeTTa-Simulation-Dashboard
 
-#### Prerequisites
+# 2. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-- Python 3.8 or higher
-- pip package manager
+# 3. Install dependencies
+pip install -r requirements.txt
 
-#### Installation
+# 4. Run the application
+streamlit run app.py
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/ASI-Chain-MeTTa-Simulation-Dashboard.git
-   cd ASI-Chain-MeTTa-Simulation-Dashboard
-   ```
+The app will open at `http://localhost:8501`
 
-2. **Create virtual environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+### First Simulation
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. Keep default settings (5 agents, 20 steps)
+2. Click **▶️ Run**
+3. Watch agents take actions and reputations change
+4. Use the replay controls to step through the simulation
 
-4. **Run the application**
-   ```bash
-   streamlit run app.py
-   ```
+---
 
-5. **Open your browser**
-   
-   The app will automatically open at `http://localhost:8501`
+## 📖 Key Concepts & Terminology
 
-### ☁️ Deploy Your Own
+### 🤖 Agents
 
-Want to host your own version? See [DEPLOYMENT.md](DEPLOYMENT.md) for a complete guide to deploying on Streamlit Cloud (free!)
+**What they are**: Autonomous entities in the simulation with individual reputation scores.
+
+**Starting state**: Each agent begins with a random reputation between 50-100.
+
+**Goal**: Maximize reputation through strategic actions.
+
+### 📊 Reputation
+
+**Definition**: A numerical score (0-200) representing an agent's standing in the network.
+
+**Purpose**: The primary metric for agent success and network health.
+
+**Dynamics**: 
+- Increases through productive actions (contribute, share)
+- Decreases through inactivity (idle)
+- Transfers through trade (with bonus)
+
+### 🎯 Actions
+
+Agents can perform four types of actions:
+
+| Action | Effect | Reputation Change | Meaning |
+|--------|--------|-------------------|---------|
+| **🤝 Contribute** | Major boost | +15 | Agent performs significant work benefiting the network |
+| **📤 Share** | Moderate boost | +8 | Agent shares knowledge or resources |
+| **💱 Trade** | Transfer | Variable | Agent transfers reputation to another (with 10% bonus) |
+| **😴 Idle** | Penalty | -2 | Agent does nothing (discourages inactivity) |
+
+### 💱 Trade (Positive-Sum Exchange)
+
+**What it means**: One agent transfers reputation to another, but the system creates value.
+
+**Example**:
+- Agent_0 trades 10 reputation to Agent_2
+- Agent_0 loses: -10
+- Agent_2 gains: +11 (10 × 1.1)
+- **Net system gain**: +1 reputation
+
+**Why positive-sum?**: Represents the economic principle that voluntary exchange creates value. The 10% multiplier incentivizes cooperation and trading over hoarding.
+
+### 🏥 Health Score
+
+**Definition**: Average reputation across all agents.
+
+**Formula**: `Health Score = Sum of all reputations / Number of agents`
+
+**Purpose**: System-level metric showing overall network performance.
+
+**Typical range**: 50-120 (starts at ~75, grows with productive actions)
+
+### 🕸️ Network Graph
+
+**Nodes (Circles)**: 
+- Each node = one agent
+- **Size**: Larger = higher reputation
+- **Color**: Indicates reputation tier (red → orange → yellow → green)
+
+**Edges (Lines)**:
+- Connect agents with **similar reputations**
+- Show reputation-based clustering
+- **NOT** trade relationships or interactions
+- Each agent links to 2-3 nearest reputation peers
+
+**Why this design?**: Makes it easy to visually identify reputation tiers and watch agents migrate between clusters as their reputation changes.
+
+### 🧠 MeTTa (Meta Type Talk)
+
+**What it is**: A programming language for AGI that operates on hypergraphs.
+
+**Role in simulation**: Defines the symbolic rules governing agent behavior.
+
+**Example rule**:
+```metta
+; When an agent contributes, increase their reputation by 15
+(= (action-contribute $agent)
+   (update-reputation $agent 15))
+```
+
+### 🔗 Grounded Functions
+
+**Definition**: Python functions that can be called from MeTTa code.
+
+**Purpose**: Bridge between symbolic reasoning (MeTTa) and actual computation (Python).
+
+**Example**: The `update-reputation` function is called from MeTTa but implemented in Python.
+
+### 📈 Graph Update Frequency
+
+**What it is**: How often the visualization updates (every N steps).
+
+**Default**: Every 3 steps
+
+**Purpose**: Reduces flicker while keeping visualization responsive.
+
+**Trade-off**: 
+- Lower (1-2): See every change, but more flicker
+- Higher (5-10): Smoother, but less frequent updates
+
+---
+
+## 🎨 Design Choices
+
+### Why These Agent Actions?
+
+1. **Contribute (+15)**: Largest reward encourages productive behavior
+2. **Share (+8)**: Moderate reward balances generosity with self-interest
+3. **Trade (1.1x)**: Positive-sum incentivizes cooperation over isolation
+4. **Idle (-2)**: Small penalty keeps agents active without being punitive
+
+**Alternative considered**: Zero-sum trade (1.0x multiplier) - rejected because it doesn't incentivize trading.
+
+### Why Reputation-Based Clustering?
+
+**Chosen approach**: Edges connect similar-reputation agents
+
+**Reasoning**:
+- Creates intuitive visual tiers (high/medium/low reputation groups)
+- Easy to see agents migrate between clusters
+- Shows emergent social structure based on performance
+
+**Alternative considered**: Random connections - rejected because it doesn't convey meaningful information.
+
+**Alternative considered**: Trade-history connections - rejected because trades are rare and graph would be sparse.
+
+### Why Start Agents at 50-100?
+
+**Reasoning**:
+- Gives room to grow (up to 200)
+- Prevents immediate failure (floor at 0)
+- Creates initial diversity in the network
+- Allows for interesting early dynamics
+
+**Alternative considered**: All start at 100 - rejected because it's less interesting visually.
+
+### Why 0-200 Reputation Scale?
+
+**Reasoning**:
+- 100 = neutral midpoint (easy reference)
+- Room for both growth and decline
+- Clean divisions: 0-50 (red), 50-100 (orange), 100-150 (yellow), 150-200 (green)
+
+### Why Simplified MeTTa Version by Default?
+
+**Technical challenge**: Full `hyperon` package requires Conan (C++ build system) which:
+- Takes 10-15 minutes to compile
+- Requires additional system dependencies
+- May fail on some platforms
+
+**Solution**: Created `agent_sim_simple.py` that:
+- Simulates MeTTa-like behavior using pure Python
+- Installs in seconds
+- Demonstrates the same concepts
+- Falls back gracefully if hyperon isn't available
+
+**For advanced users**: Instructions provided in `install_hyperon.sh` for full MeTTa support.
+
+### Why Step-by-Step Replay?
+
+**Purpose**: Educational tool for understanding simulation dynamics
+
+**Use cases**:
+- **Analysis**: Review specific actions and their impacts
+- **Presentations**: Step through interesting moments
+- **Debugging**: Understand unexpected behavior
+- **Learning**: See how each action affects the network
+
+**Implementation**: Stores complete agent state at every step (memory trade-off for functionality).
+
+### Why These Colors?
+
+Color psychology applied to reputation tiers:
+
+- 🟢 **Green (150-200)**: Success, growth, positive
+- 🟡 **Yellow (100-150)**: Caution, stable, adequate
+- 🟠 **Orange (50-100)**: Warning, needs attention
+- 🔴 **Red (0-50)**: Danger, failing, critical
+
+Makes status immediately recognizable without reading numbers.
+
+---
 
 ## 📖 How to Use
 
 ### Basic Workflow
 
 1. **Configure Parameters** in the sidebar:
-   - Number of Agents (3-20)
-   - Simulation Steps (10-100)
-   - Step Delay (0.1-2.0 seconds)
+   - **Number of Agents** (3-20): More agents = complex dynamics
+   - **Simulation Steps** (10-100): How long to run
+   - **Step Delay** (0.1-2.0s): Speed of animation
+   - **Graph Update Frequency** (1-10): Smoothness vs detail
 
-2. **Click ▶️ Run** to start the simulation
+2. **Click ▶️ Run** to start
 
-3. **Watch the simulation** as:
-   - Agents take actions (contribute, share, trade, idle)
-   - Reputations change based on MeTTa rules
-   - The network graph updates in real-time
-   - Health score evolves
+3. **Observe**:
+   - Status bar shows current action
+   - Graph updates showing network changes
+   - Metrics track health score and distribution
 
-4. **Stop** the simulation anytime with the ⏹️ Stop button
+4. **Control**:
+   - **⏹️ Stop**: Pause simulation anytime
+   - **🔄 Reset**: Clear and start fresh
 
-5. **Reset** to start fresh with new parameters
+5. **Replay** (after completion):
+   - Use slider to jump to any step
+   - Click ⏪ Previous / Next ⏩ to step through
+   - See exact action and reputation changes
 
-### Understanding the Visualization
+### Understanding What You See
 
-**Node Colors** indicate reputation levels:
-- 🟢 **Green** (150-200): Excellent reputation
-- 🟡 **Yellow** (100-150): Good reputation  
-- 🟠 **Orange** (50-100): Average reputation
-- 🔴 **Red** (0-50): Low reputation
+**During Simulation:**
+- Colored banner shows current action
+- Graph updates periodically (based on update frequency)
+- Metrics update every step
+- Nodes change color/size as reputations change
 
-**Node Size** is proportional to reputation value.
+**In Replay Mode:**
+- Navigate to any point in the simulation
+- See the exact network state at that moment
+- Review action details for each step
 
-**Edges** connect agents with similar reputations, showing network clustering.
+### Tips for Best Experience
 
-## 🔬 How It Works
+**For Smooth Visualization:**
+- Set Graph Update Frequency to 5-10
+- Use 0.3-0.5 second step delay
 
-### Architecture
+**For Detailed Analysis:**
+- Set Graph Update Frequency to 1-2
+- Use 1.0+ second step delay
+- Run fewer steps (10-20) for focused study
 
-The project is organized into three main modules:
+**For Quick Overview:**
+- Set Graph Update Frequency to 10
+- Use 0.1 second step delay
+- Run many steps (50-100) to see long-term trends
+
+---
+
+## 🏗️ Architecture
+
+### Project Structure
 
 ```
 ASI-Chain-MeTTa-Simulation-Dashboard/
-├── app.py              # Streamlit UI and control flow
-├── agent_sim.py        # Core simulation logic with MeTTa
-├── visualizer.py       # Graph rendering (NetworkX + PyVis)
-├── requirements.txt    # Python dependencies
-└── README.md          # This file
+├── app.py                    # Streamlit UI and control flow
+├── agent_sim_simple.py       # Core simulation (pure Python)
+├── agent_sim.py             # Core simulation (full hyperon) [optional]
+├── visualizer.py            # Graph rendering (NetworkX + PyVis)
+├── requirements.txt         # Python dependencies
+├── install_hyperon.sh       # Script for full hyperon installation
+├── test_installation.py     # Verify dependencies
+├── .streamlit/
+│   └── config.toml          # Streamlit theme configuration
+├── packages.txt             # System dependencies for cloud deployment
+└── README.md               # This file
+```
+
+### Module Responsibilities
+
+**app.py** (544 lines):
+- Streamlit interface
+- Session state management
+- Simulation control flow
+- Replay navigation
+- Action indicators
+
+**agent_sim_simple.py** (275 lines):
+- Agent initialization
+- MeTTa-like rule system
+- Action execution
+- Reputation management
+- Health score calculation
+
+**visualizer.py** (316 lines):
+- NetworkX graph creation
+- PyVis HTML generation
+- Node styling (color, size)
+- Edge creation (similarity-based)
+- Network statistics
+
+### Data Flow
+
+```
+┌──────────────┐
+│   User Input │ (sidebar controls)
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│  app.py      │ (orchestration)
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ agent_sim.py │ (simulation logic)
+│  - MeTTa rules
+│  - State updates
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│visualizer.py │ (graph generation)
+│  - NetworkX
+│  - PyVis
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│  Browser     │ (interactive display)
+└──────────────┘
 ```
 
 ### MeTTa Integration
 
-**MeTTa (Meta Type Talk)** is a programming language for AGI that operates on hypergraphs. In this simulation:
-
-1. **Shared Space**: A `hypergraph` memory where all agents coexist
-2. **Symbolic Rules**: Logic defining reputation changes based on actions
-3. **Grounded Functions**: Python functions callable from MeTTa for dynamic updates
-
-#### Agent Actions in MeTTa
-
-The simulation defines cognitive rules in MeTTa:
-
-```metta
-; Contribute action increases reputation significantly
+**Symbolic Rules** (in `agent_sim.py`):
+```python
+metta_rules = """
 (= (action-contribute $agent)
    (update-reputation $agent 15))
 
-; Share action increases reputation moderately
 (= (action-share $agent)
    (update-reputation $agent 8))
-
-; Idle decreases reputation (encouraging activity)
-(= (action-idle $agent)
-   (update-reputation $agent -2))
+"""
+self.metta.run(metta_rules)
 ```
 
-#### Grounded Functions
-
-Python functions are registered with MeTTa using the `@operation` decorator:
-
+**Grounded Functions**:
 ```python
-def update_reputation(agent_name: Atom, delta: Atom) -> Atom:
-    """Update an agent's reputation by a delta value."""
-    # ... implementation
-    return ValueAtom(new_reputation)
+def update_reputation(agent_name, delta):
+    # Python implementation
+    return new_reputation
 
-metta.register_atom('update-reputation', 
-                    OperationAtom('update-reputation', update_reputation))
+# Register with MeTTa
+metta.register_function('update-reputation', update_reputation)
 ```
 
-### Reputation Dynamics
+**Execution**:
+```python
+# Call MeTTa rule from Python
+result = metta.run("!(action-contribute Agent_0)")
+```
 
-**Agent Actions:**
-- **Contribute** (+15): Major contribution to the network
-- **Share** (+8): Moderate positive action
-- **Trade**: Reputation transfer with 1.1x multiplier (positive-sum)
-- **Idle** (-2): Penalty for inactivity
+---
 
-**Health Score** = Average reputation across all agents (0-200 scale)
+## ☁️ Deployment Guide
 
-### Network Topology
+### Deploy to Streamlit Cloud (Free!)
 
-The graph visualization uses NetworkX to create connections between agents:
+1. **Push to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin https://github.com/YOUR_USERNAME/REPO_NAME.git
+   git push -u origin main
+   ```
 
-- Agents with similar reputations form clusters
-- High-reputation agents become more central in the network
-- Edge weights reflect combined reputation of connected agents
-- The graph is guaranteed to be connected (no isolated agents)
+2. **Deploy**
+   - Go to [share.streamlit.io](https://share.streamlit.io/)
+   - Click "New app"
+   - Select your repository
+   - Main file: `app.py`
+   - Click "Deploy"
 
-## 🎓 Educational Use Cases
+3. **Wait 2-3 minutes**
+   - App builds and deploys automatically
+   - You'll get a URL like: `https://YOUR_APP.streamlit.app`
 
-This dashboard is ideal for:
+4. **Auto-redeploy**
+   - Any push to GitHub triggers automatic redeployment
+   - No manual intervention needed
 
-- **AI Research**: Studying multi-agent dynamics and emergent behavior
-- **MeTTa Learning**: Exploring hypergraph-based cognitive architectures  
-- **Network Science**: Analyzing how reputation affects network topology
-- **System Design**: Understanding health metrics in distributed systems
-- **Demonstrations**: Showcasing ASI Chain concepts and MeTTa capabilities
+### Streamlit Cloud Features
 
-## 🛠️ Technical Details
+- ✅ **100% Free** for public apps
+- ✅ **Auto-deploy** on GitHub push
+- ✅ **HTTPS** included
+- ✅ **Custom subdomain**
+- ✅ **1 GB RAM** per app
+- ✅ **Sleep after inactivity** (wakes on visit)
 
-### Dependencies
+### Troubleshooting Deployment
 
-- **streamlit** (≥1.28.0): Web application framework
-- **hyperon** (≥0.1.12): MeTTa runtime for cognitive logic
-- **networkx** (≥3.1): Graph structure manipulation
-- **pyvis** (≥0.3.2): Interactive network visualization
-- **matplotlib** (≥3.7.0): Color mapping and utilities
-- **pandas** (≥2.0.0): Data handling and tables
+**Build fails**:
+- Check logs in Streamlit Cloud dashboard
+- Verify `requirements.txt` is correct
+- Ensure all files are committed to GitHub
 
-### Performance
+**App is slow**:
+- Reduce default number of agents in code
+- Increase graph update frequency default
+- Optimize PyVis rendering settings
 
-- Lightweight MeTTa rules ensure fast execution
-- Non-blocking UI with async patterns (`st.empty()`)
-- Smooth updates with configurable step delays
-- Handles 3-20 agents efficiently
+**Import errors**:
+- Make sure `agent_sim_simple.py` is in repository
+- Check that all dependencies are in `requirements.txt`
 
-### Browser Compatibility
-
-Tested on:
-- Chrome/Edge (recommended)
-- Firefox
-- Safari
+---
 
 ## 🔧 Customization
 
 ### Adding New Actions
 
-1. Define a new action rule in `agent_sim.py`:
+1. **Define MeTTa rule** in `agent_sim_simple.py`:
    ```python
-   metta_rules += """
-   (= (action-collaborate $agent)
-      (update-reputation $agent 20))
-   """
+   def action_innovate(agent):
+       return self.metta.grounded_functions['update-reputation'](agent, '25')
+   
+   self.metta.add_rule('action-innovate', action_innovate)
    ```
 
-2. Add it to the action dispatcher in the `step()` method
+2. **Add to action dispatcher**:
+   ```python
+   actions = ['contribute', 'share', 'trade', 'idle', 'innovate']
+   weights = [0.3, 0.25, 0.15, 0.1, 0.2]
+   ```
 
-3. Update the UI info in `app.py` sidebar
+3. **Update UI**:
+   - Add emoji to `action_emoji` dict
+   - Add color to `action_color` dict
+   - Update welcome screen documentation
 
-### Modifying Reputation Logic
+### Modifying Reputation Rules
 
-Edit the MeTTa rules in `_load_metta_rules()` method:
+Change the values in `_load_rules()`:
 
 ```python
-; Custom rule example: bonus for high reputation
-(= (bonus-high-rep $agent $rep)
-   (if (> $rep 150) 
-       (update-reputation $agent 5)
-       (update-reputation $agent 0)))
+def action_contribute(agent):
+    return self.metta.grounded_functions['update-reputation'](agent, '20')  # Was 15
 ```
 
-### Changing Visualization
+### Adjusting Trade Multiplier
 
-Customize graph appearance in `visualizer.py`:
+In `transfer_reputation()` function:
+
+```python
+self.agents[to_agent] += transfer_amount * 1.2  # Was 1.1 (20% bonus instead of 10%)
+```
+
+### Changing Visualization Colors
+
+In `visualizer.py`:
 
 ```python
 def _get_reputation_color(reputation: float) -> str:
-    # Modify color scheme here
-    if reputation > 100:
-        return '#YOUR_COLOR_CODE'
+    if normalized < 0.25:
+        return '#YOUR_HEX_COLOR'  # Change red zone color
 ```
 
-## 🚧 Future Enhancements
+### Modifying Graph Clustering
 
-Potential extensions (from original spec):
+In `create_agent_graph()`:
 
-- **Multi-Shard Simulation**: Separate `Space` instances for reputation, data, compute
-- **Export Functionality**: Save hypergraph snapshots as JSON
-- **AI Reasoning Log**: Panel showing MeTTa query results and decision traces
-- **Advanced Metrics**: Clustering coefficients, betweenness centrality
-- **Agent Profiles**: Individual agent dashboards with action history
-- **Deployment**: One-click deploy to Streamlit Cloud or Hugging Face Spaces
+```python
+num_connections = min(5, len(similar_agents))  # Was 3
+```
 
-## 📝 License
-
-MIT License - feel free to use, modify, and distribute.
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions welcome! Here's how:
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+### Getting Started
 
-## 📧 Contact
+1. **Fork** the repository
+2. **Clone** your fork
+3. **Create a branch**: `git checkout -b feature/amazing-feature`
+4. **Make changes**
+5. **Test**: Run `python test_installation.py`
+6. **Commit**: `git commit -m "Add amazing feature"`
+7. **Push**: `git push origin feature/amazing-feature`
+8. **Open Pull Request** on GitHub
 
-For questions, suggestions, or collaboration:
+### Code Style
 
-- GitHub Issues: [Report a bug or request a feature](https://github.com/yourusername/ASI-Chain-MeTTa-Simulation-Dashboard/issues)
-- Email: your.email@example.com
+- Follow PEP 8
+- Use type hints
+- Write docstrings
+- Add comments for complex logic
+- Keep functions focused (< 50 lines)
+
+### What to Contribute
+
+**Ideas welcome**:
+- New agent actions
+- Different network topologies
+- Alternative visualization styles
+- Performance improvements
+- Bug fixes
+- Documentation improvements
+
+**Priority areas**:
+- Multi-shard simulation (separate reputation/data/compute spaces)
+- Export/import functionality
+- Advanced metrics (centrality, clustering coefficients)
+- Agent personality traits
+- Historical comparison tools
+
+---
+
+## 📝 License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+Free to use, modify, and distribute with attribution.
+
+---
 
 ## 🙏 Acknowledgments
 
-- **OpenCog Hyperon** team for the MeTTa language and hyperon package
+- **OpenCog Hyperon** team for MeTTa language and hyperon package
 - **Streamlit** team for the amazing web framework
 - **NetworkX** and **PyVis** communities for visualization tools
-- **ASI Chain** concept and inspiration
+- **ASI Chain** concept and inspiration from distributed AI research
+- All contributors and users of this project
+
+---
+
+## 📧 Support
+
+**Questions?**
+- Open an [issue on GitHub](https://github.com/yourusername/ASI-Chain-MeTTa-Simulation-Dashboard/issues)
+- Check existing issues for similar questions
+
+**Bug Reports:**
+- Include error message and full traceback
+- Describe steps to reproduce
+- Mention your environment (OS, Python version)
+
+**Feature Requests:**
+- Describe the feature and use case
+- Explain why it would be valuable
+- Consider submitting a PR!
 
 ---
 
@@ -308,7 +622,8 @@ For questions, suggestions, or collaboration:
 
 *Exploring the future of cognitive AI architectures, one agent at a time.*
 
+---
 
+**⭐ Star this repo if you find it useful!**
 
-
-
+**🔗 Live Demo**: [Your App on Streamlit Cloud](https://your-app-url.streamlit.app)
