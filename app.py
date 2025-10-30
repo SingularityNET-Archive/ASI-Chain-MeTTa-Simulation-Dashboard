@@ -210,15 +210,21 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
         
         # Update status
         with status_placeholder.container():
-            col1, col2, col3 = st.columns([2, 1, 1])
+            # Action indicator bar
+            action_emoji = {
+                'contribute': '🤝',
+                'share': '📤',
+                'trade': '💱',
+                'idle': '😴'
+            }
+            emoji = action_emoji.get(step_info['action'], '⚡')
+            
+            col1, col2 = st.columns([1, 3])
             with col1:
-                st.markdown(f"**Step {step + 1}/{num_steps}** - "
-                          f"<span class='status-running'>Running...</span>", 
-                          unsafe_allow_html=True)
+                st.markdown(f"**Step {step + 1}/{num_steps}**")
             with col2:
-                st.write(f"**Action:** {step_info['action']}")
-            with col3:
-                st.write(f"**Agent:** {step_info['agent']}")
+                action_display = f"{emoji} **{step_info['agent']}** performed **{step_info['action'].upper()}** (Change: {step_info['reputation_change']:+.1f})"
+                st.markdown(action_display)
         
         # Get current agent states
         agent_states = st.session_state.simulation.get_agent_states()
@@ -230,6 +236,32 @@ def run_simulation(num_agents: int, num_steps: int, step_delay: float):
         if step % update_interval == 0 or step == num_steps - 1:
             with graph_placeholder.container():
                 st.subheader("🕸️ Agent Network Visualization")
+                
+                # Display current action indicator
+                action_emoji = {
+                    'contribute': '🤝',
+                    'share': '📤',
+                    'trade': '💱',
+                    'idle': '😴'
+                }
+                emoji = action_emoji.get(step_info['action'], '⚡')
+                action_color = {
+                    'contribute': '#27AE60',
+                    'share': '#3498DB',
+                    'trade': '#F39C12',
+                    'idle': '#E74C3C'
+                }
+                color = action_color.get(step_info['action'], '#95A5A6')
+                
+                st.markdown(f"""
+                <div style="background-color: {color}; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
+                    <span style="font-size: 1.2em; color: white; font-weight: bold;">
+                        {emoji} {step_info['agent']} performed <u>{step_info['action'].upper()}</u> 
+                        (Rep: {step_info['old_reputation']:.1f} → {step_info['new_reputation']:.1f}, 
+                        Change: {step_info['reputation_change']:+.1f})
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 nx_graph = create_agent_graph(agent_states)
                 # Use faster rendering during simulation (less stabilization)
